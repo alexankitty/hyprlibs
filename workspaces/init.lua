@@ -16,8 +16,6 @@ Usage in hyprland.lua:
 local M = {}
 M.dsp = {}
 
-local last_workspace = nil
-
 --- Toggle the focused window in/out of the special workspace `special_workspace`.
 -- @param special_workspace string|nil defaults to "minimized"
 function M.toggle_special(special_workspace)
@@ -31,9 +29,8 @@ function M.toggle_special(special_workspace)
 
     if win.workspace.name == target_name then
         -- Already parked in the special workspace: send it back.
-        local real_ws = last_workspace or hl.get_active_workspace()
 
-        hl.dispatch(hl.dsp.window.move({ workspace = real_ws, window = win, follow = false }))
+        hl.dispatch(hl.dsp.window.move({ workspace = hl.get_active_workspace(), window = win, follow = false }))
         hl.dispatch(hl.dsp.workspace.toggle_special(special_workspace))
         hl.dispatch(hl.dsp.focus({ window = win }))
     else
@@ -47,9 +44,5 @@ function M.dsp.toggle_special(special_workspace)
         M.toggle_special(special_workspace)
     end
 end
-
-hl.on("workspace.active", function()
-    last_workspace = hl.get_active_workspace()
-end)
 
 Workspaces = M
