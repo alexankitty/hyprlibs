@@ -16,9 +16,6 @@ Usage in hyprland.lua:
 local M = {}
 M.dsp = {}
 
--- Per special-workspace-name memory of the last real workspace a window
--- was pulled from, so toggling back doesn't just dump it on whatever
--- workspace happens to be active right now.
 local last_workspace = nil
 
 --- Toggle the focused window in/out of the special workspace `special_workspace`.
