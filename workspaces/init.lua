@@ -1,10 +1,8 @@
 --[[
 Usage in hyprland.lua:
 
-    local toggle_special = require("toggle_special")
-
     hl.bind("SUPER + M", function()
-      toggle_special.toggle_special("minimized")
+      Workspaces.toggle_special("minimized")
     end)
 
     -- a second, differently-named group works the same way:
@@ -16,9 +14,6 @@ Usage in hyprland.lua:
 local M = {}
 M.dsp = {}
 
--- Per special-workspace-name memory of the last real workspace a window
--- was pulled from, so toggling back doesn't just dump it on whatever
--- workspace happens to be active right now.
 local last_real_workspace = {}
 
 --- Toggle the focused window in/out of the special workspace `special_workspace`.
