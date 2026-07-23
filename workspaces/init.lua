@@ -4,7 +4,7 @@ Usage in hyprland.lua:
     local toggle_special = require("toggle_special")
 
     hl.bind("SUPER + M", function()
-      toggle_special.toggle_special("minimized")
+      Workspaces.toggle_special("minimized")
     end)
 
     -- a second, differently-named group works the same way:
