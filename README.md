@@ -19,6 +19,7 @@ the ones you need.
 |---|---|
 | [`app-mgmt`](app-mgmt/README.md) | Run, kill, delay, and dedupe application launches, with optional [uwsm](https://github.com/Vladimir-csp/uwsm) support and deferred/dispatcher-friendly variants for keybinds. |
 | [`monitor`](monitor/README.md) | Detect the origin/primary monitor, auto-assign per-monitor workspace blocks, and export the primary monitor's name for use in other configs (e.g. hyprlock). |
+| [`workspaces`](workspaces/README.md) | Manage special/workspace groups, including toggling windows in/out of them. |
 
 See each library's own README for its full API and usage examples.
 
