@@ -1,9 +1,6 @@
 # workspaces
 
-Multi-monitor helpers for Hyprland's Lua config: figuring out which output
-sits at the origin, auto-assigning blocks of workspaces per monitor, and
-exporting the "primary" monitor's name for other configs (e.g. hyprlock) to
-consume.
+Moves windows to/from the special/workspace group.
 
 ## Loading it
 
