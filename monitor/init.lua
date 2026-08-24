@@ -1,5 +1,7 @@
 Monitor = {}
 
+Monitor.Disabled = {}
+
 function Monitor.Get_Origin()
     local mon = hl.get_monitor_at(0, 0)
     return mon and mon.name or nil
@@ -52,5 +54,14 @@ function Monitor.Write_Primary()
             f:write("$monitor = ")
         end
         f:close()
+    end
+end
+
+function Monitor.Process_Disabled()
+    for index, value in ipairs(Monitor.Disabled) do
+        hl.monitor({
+            output = value,
+            disabled = true
+	})
     end
 end

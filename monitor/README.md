@@ -74,6 +74,23 @@ hl.on("hyprland.start", function()
 end)
 ```
 
+### `Monitor.Process_Disabled()`
+Runs through a list of Monitors provided in the `Monitor.Disabled` table and sets them to disabled so that they do not show up.
+
+Add in an event listener to process the disabled output list whenever a monitor is added or removed.
+
+```lua
+local function handle_monitor_event()
+    Monitor.Process_Disabled()
+    Monitor.Assign_Workspaces(workspaces_per_monitor)
+    Monitor.Write_Primary()
+end
+
+handle_monitor_event()
+hl.on("monitor.added", handle_monitor_event)
+hl.on("monitor.removed", handle_monitor_event)
+```
+
 ## License
 
 GPL-3.0, see the [repository LICENSE](../LICENSE).
