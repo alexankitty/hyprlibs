@@ -105,6 +105,17 @@ function appmgr:new(o, uwsm_runner)
         end
     end
 
+    o.Dispatch_Delayed = function(dispatcher, delay)
+        if type(delay) ~= "number" then
+            print("Requires a delay.")
+            return
+        end
+        local dispatch_timer = hl.timer(function()
+            hl.dispatch(dispatcher)
+        end, { timeout = delay * 1000, type = "oneshot" })
+        dispatch_timer:set_enabled(true)
+    end
+
     return o
 end
 
