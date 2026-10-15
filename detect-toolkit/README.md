@@ -1,24 +1,28 @@
-# toolkit
+# detect-toolkit
 
 Detects which GUI toolkit a window uses by scanning its process's loaded libraries.
-Will automatically tag a window with its toolkit.
+
+Includes a script to automatically tag windows with their toolkit.
 
 ## Loading it
 
 ```lua
-local toolkit = require("toolkit")
+local toolkit = require("lib.detect-toolkit")
 ```
 
-This returns a module table. Nothing is added to the global namespace.
+This returns a module table. Nothing is added to the global namespace. Adjust the path to wherever the module lives in your config.
 
 ## `toolkit` API
 
 ### `toolkit.detect(pid)`
 
-Returns the toolkit name for a process ID, or `nil` if none was detected or `/proc/<pid>/maps` couldn't be read. Detected names are `"qt6"`, `"qt5"`, `"gtk4"`, `"gtk3"` and `"sdl"`.
+Returns two values for a process ID: the base toolkit and an optional variant. Both are `nil` if no toolkit was detected or `/proc/<pid>/maps` couldn't be read.
+
+Base toolkits are `"qt6"`, `"qt5"`, `"gtk4"`, `"gtk3"` and `"sdl"`. The only variant is `"adwaita"` (libadwaita), which applies to `"gtk4"`.
 
 ```lua
-toolkit.detect(hl.get_active_window().pid)
+local tk, variant = toolkit.detect(hl.get_active_window().pid)
+-- "gtk4", "adwaita"
 ```
 
 ### `toolkit.of(window)`
@@ -26,17 +30,19 @@ toolkit.detect(hl.get_active_window().pid)
 Same as `detect`, but takes a Hyprland window object.
 
 ```lua
-toolkit.of(w)
+local tk, variant = toolkit.of(w)
+
+if tk == "gtk4" and variant == "adwaita" then
+  -- libadwaita app
+end
 ```
 
-### `toolkit.forget(pid)`
+### `toolkit.name(window)`
 
-Clears the cached result for a PID. Call it on `window.destroy` so a reused PID doesn't return a stale result.
+Returns the base toolkit and variant joined into one string, or `nil` if no toolkit was detected.
 
 ```lua
-hl.on("window.destroy", function(w)
-  if w then toolkit.forget(w.pid) end
-end)
+toolkit.name(w)  -- "gtk4-adwaita", "qt6", or nil
 ```
 
 ## Example
@@ -52,8 +58,12 @@ end)
 ## Notes
 
 - Qt is checked before GTK, since Qt apps can load GTK libraries via the platform theme, but GTK apps rarely load Qt.
+- The first return value is always the base toolkit, so a check like `toolkit.of(w) == "gtk4"` still matches libadwaita apps.
+- `adwaita` means libadwaita, not the Adwaita theme. A GTK4 app that doesn't link libadwaita is reported as plain `gtk4`.
+- Detection only sees libraries mapped at scan time, so libraries loaded later with `dlopen` are missed.
 - Electron, Chromium, Java and sandboxed (Flatpak) apps often return `nil`.
-- Results are cached per PID. To pick up edits to the module after a config reload, set `package.loaded["toolkit"] = nil` before requiring it.
+- Nothing is cached. Each call rescans `/proc/<pid>/maps`, and no cleanup is needed when windows close.
+- To pick up edits to the module after a config reload, set `package.loaded["lib.detect-toolkit"] = nil` before requiring it.
 
 ## License
 
