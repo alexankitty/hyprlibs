@@ -55,6 +55,34 @@ hl.on("window.open", function(w)
 end)
 ```
 
+## Tagging windows
+
+`detect-toolkit/tags.lua` adds the detected toolkit to each window as a Hyprland tag, so you can match on it in ordinary window rules.
+
+```lua
+require("lib.detect-toolkit.tags").enable()
+```
+
+Windows get tags like `toolkit_qt6` or `toolkit_gtk4-adwaita`, and `toolkit_none` when nothing was detected.
+
+```lua
+hl.window_rule({
+  name = "adwaita-rounding",
+  match = { tag = "toolkit_gtk4-adwaita" },
+  rounding = 12,
+})
+```
+
+### `tags.enable(opts)`
+
+| Option    | Default      | Description                                                      |
+| --------- | ------------ | ---------------------------------------------------------------- |
+| `prefix`  | `"toolkit_"` | Prefix for the tag name                                          |
+| `none`    | `"none"`     | Suffix used when no toolkit is detected. `false` skips tagging   |
+| `toolkit` | auto         | An already-loaded detect-toolkit module, to skip the lookup      |
+
+Requiring `tags` has no effect until `enable()` is called.
+
 ## Notes
 
 - Qt is checked before GTK, since Qt apps can load GTK libraries via the platform theme, but GTK apps rarely load Qt.
