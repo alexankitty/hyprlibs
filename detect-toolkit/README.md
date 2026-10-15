@@ -1,6 +1,7 @@
 # toolkit
 
 Detects which GUI toolkit a window uses by scanning its process's loaded libraries.
+Will automatically tag a window with its toolkit.
 
 ## Loading it
 

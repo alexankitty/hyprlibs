@@ -1,7 +1,11 @@
--- ~/.config/hypr/toolkit.lua
-local M = {}
+local info = debug.getinfo(1, 'S')
+local this_dir = string.match(info.source, '^@(.*)/')
 
-local cache = {}  -- pid -> toolkit name, or false if scanned with no match
+package.path = this_dir .. "/?.lua;" .. package.path
+
+require("tag-toolkit")
+
+local M = {}
 
 -- Order matters: Qt apps can load libgtk via the GTK platform theme,
 -- but GTK apps almost never load Qt, so check Qt first.
@@ -13,45 +17,57 @@ local signatures = {
     { name = "sdl",  pattern = "libSDL[23]" },
 }
 
---- Returns "qt6" | "qt5" | "gtk4" | "gtk3" | "sdl" | nil
+-- Variants layered on top of a base toolkit
+local variants = {
+    { name = "adwaita", base = "gtk4", pattern = "libadwaita%-1" },
+}
+
+--- Returns toolkit, variant   e.g. "gtk4", "adwaita"  |  "qt6", nil  |  nil, nil
 function M.detect(pid)
-if not pid or pid <= 0 then return nil end
+if not pid or pid <= 0 then return nil, nil end
 
-    local cached = cache[pid]
-    if cached ~= nil then return cached or nil end
+    local f = io.open("/proc/" .. pid .. "/maps", "r")
+    if not f then return nil, nil end
 
-        local f = io.open("/proc/" .. pid .. "/maps", "r")
-        if not f then return nil end  -- not cached, may succeed later
+        local found = {}
+        for line in f:lines() do
+            for _, sig in ipairs(signatures) do
+                if not found[sig.name] and line:find(sig.pattern) then
+                    found[sig.name] = true
+                    end
+                    end
+                    for _, var in ipairs(variants) do
+                        if not found[var.name] and line:find(var.pattern) then
+                            found[var.name] = true
+                            end
+                            end
+                            end
+                            f:close()
 
-            local found = {}
-            for line in f:lines() do
-                for _, sig in ipairs(signatures) do
-                    if not found[sig.name] and line:find(sig.pattern) then
-                        found[sig.name] = true
-                        end
-                        end
-                        end
-                        f:close()
+                            for _, sig in ipairs(signatures) do
+                                if found[sig.name] then
+                                    for _, var in ipairs(variants) do
+                                        if var.base == sig.name and found[var.name] then
+                                            return sig.name, var.name
+                                            end
+                                            end
+                                            return sig.name, nil
+                                            end
+                                            end
+                                            return nil, nil
+                                            end
 
-                        for _, sig in ipairs(signatures) do
-                            if found[sig.name] then
-                                cache[pid] = sig.name
-                                return sig.name
-                                end
-                                end
+                                            --- Same as detect, but takes a window object
+                                            function M.of(window)
+                                            if not window then return nil, nil end
+                                                return M.detect(window.pid)
+                                                end
 
-                                cache[pid] = false
-                                return nil
-                                end
+                                                --- Combined name, e.g. "gtk4-adwaita", "qt6", or nil
+                                                function M.name(window)
+                                                local tk, variant = M.of(window)
+                                                if not tk then return nil end
+                                                    return variant and (tk .. "-" .. variant) or tk
+                                                    end
 
-                                --- Convenience: detect directly from a window object
-                                function M.of(window)
-                                return window and M.detect(window.pid) or nil
-                                end
-
-                                --- Forget a pid (call on window.destroy to avoid stale entries after PID reuse)
-                                function M.forget(pid)
-                                cache[pid] = nil
-                                end
-
-                                return M
+                                                    return M
