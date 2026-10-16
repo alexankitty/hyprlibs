@@ -3,51 +3,43 @@ local M = {}
 -- Order matters: Qt apps can load libgtk via the GTK platform theme,
 -- but GTK apps almost never load Qt, so check Qt first.
 local signatures = {
-    { name = "qt6",  pattern = "libQt6Core" },
-    { name = "qt5",  pattern = "libQt5Core" },
-    { name = "gtk4", pattern = "libgtk%-4"  },
-    { name = "gtk3", pattern = "libgtk%-3"  },
-    { name = "sdl",  pattern = "libSDL[23]" },
+    { name = "qt6",  patterns = { "libQt6Core" } },
+    { name = "qt5",  patterns = { "libQt5Core" } },
+    { name = "gtk4", patterns = { "libgtk-4" } },
+    { name = "gtk3", patterns = { "libgtk-3" } },
+    { name = "sdl",  patterns = { "libSDL2", "libSDL3" } },
 }
 
--- Variants layered on top of a base toolkit
 local variants = {
-    { name = "adwaita", base = "gtk4", pattern = "libadwaita%-1" },
+    { name = "adwaita", base = "gtk4", patterns = { "libadwaita-1" } },
 }
 
---- Returns toolkit, variant   e.g. "gtk4", "adwaita"  |  "qt6", nil  |  nil, nil
+local function has_any(data, patterns)
+    for _, p in ipairs(patterns) do
+        if data:find(p, 1, true) then return true end -- plain find, no pattern engine
+    end
+    return false
+end
+
 function M.detect(pid)
     if not pid or pid <= 0 then return nil, nil end
 
-    local f = io.open("/proc/" .. pid .. "/maps", "r")
+    local f = io.open("/proc/" .. pid .. "/maps", "rb")
     if not f then return nil, nil end
-
-    local found = {}
-    for line in f:lines() do
-        for _, sig in ipairs(signatures) do
-            if not found[sig.name] and line:find(sig.pattern) then
-                found[sig.name] = true
-            end
-        end
-        for _, var in ipairs(variants) do
-            if not found[var.name] and line:find(var.pattern) then
-                found[var.name] = true
-            end
-        end
-    end
+    local data = f:read("a")
     f:close()
+    if not data then return nil, nil end
 
     for _, sig in ipairs(signatures) do
-        if found[sig.name] then
+        if has_any(data, sig.patterns) then
             for _, var in ipairs(variants) do
-                if var.base == sig.name and found[var.name] then
+                if var.base == sig.name and has_any(data, var.patterns) then
                     return sig.name, var.name
                 end
             end
             return sig.name, nil
         end
     end
-
     return nil, nil
 end
 
